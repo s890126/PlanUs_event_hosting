@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PlanUs</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/response-targets.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-md" hx-ext="response-targets">
+        <h2 class="text-5xl font-bold mb-6 text-center">PlanUs</h2>
+        <form hx-post="/login" hx-target="#response" hx-swap="outerHTML" hx-target-error="#error_response" class="bg-white shadow-md rounded px-10 pt-8 pb-10 mb-6">
+            <div class="mb-6">
+                <label class="block text-gray-700 text-lg font-bold mb-2" for="username">
+                    Email
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="email" name="username" required>
+            </div>
+            <div class="mb-8">
+                <label class="block text-gray-700 text-lg font-bold mb-2" for="password">
+                    Password
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" name="password" required>
+            </div>
+            <div id="error_response" class="text-center text-red-500 mb-4"></div>
+            <div class="flex items-center justify-between">
+                <button class="bg-purple-400 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline text-lg" type="submit">
+                    Sign In
+                </button>
+                <a class="inline-block align-baseline font-bold text-lg text-blue-500 hover:text-blue-800" href="/signup">
+                    Create an account
+                </a>
+            </div>
+        </form>
+        <div id="response"></div>
+        
+    </div>
+</body>
+</html>

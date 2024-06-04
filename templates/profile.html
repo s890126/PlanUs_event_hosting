@@ -1,0 +1,29 @@
+{% extends "profile_base.html" %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">User Profile</h1>
+    <div class="flex items-center mb-4" id="profile-info">
+        <img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile Picture" class="h-32 w-32 rounded-full mr-4">
+        <div>
+            <h2 class="text-xl font-bold">{{ user.email }}</h2>
+            <p class="text-gray-600">{{ user.bio }}</p>
+            <p class="text-gray-600">School: {{ user.school }}</p>
+            <p class="text-gray-600">Birthday: {{ user.birthday }}</p>
+        </div>
+    </div>
+    <form id="profile-picture-form" action="/{{ user.id }}/upload_profile_picture" method="post" enctype="multipart/form-data" class="mb-4">
+        <input type="file" name="file" id="profile_picture" accept="image/*" class="border rounded py-2 px-3 mb-2">
+        <button type="submit" class="bg-purple-400 text-white py-2 px-4 rounded">Upload New Picture</button>
+    </form>
+    <form id="profile-form" action="/{{ user.id }}/update" method="post" class="mb-4">
+        <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+        <textarea id="bio" name="bio" rows="3" class="border rounded py-2 px-3 w-full mb-2">{{ user.bio }}</textarea>
+        
+        <label for="school" class="block text-sm font-medium text-gray-700">School</label>
+        <input type="text" id="school" name="school" value="{{ user.school }}" class="border rounded py-2 px-3 w-full mb-2">
+        
+        <button type="submit" class="bg-purple-400 text-white py-2 px-4 rounded">Update Profile</button>
+    </form>
+</div>
+{% endblock %}

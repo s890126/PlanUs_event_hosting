@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanUs</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <header class="bg-purple-400 text-white">
+        <div class="container mx-auto flex items-center justify-between p-4">
+            <div class="flex items-center">
+                <img src="/static/images/logo.png" alt="Logo" class="h-8 mr-2">
+                <span class="text-3xl font-bold">PlanUs</span>
+            </div>
+            <div class="flex-grow mx-4">
+                <div class="relative">
+                    <input type="text" placeholder="Search Event" class="w-full py-2 pl-10 pr-4 bg-gray-100 text-black rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <!-- Heroicon: Search -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.42-1.42l4.11 4.11a1 1 0 01-1.42 1.42l-4.11-4.11zM8 14A6 6 0 108 2a6 6 0 000 12z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Heroicon: Plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <!-- Heroicon: Bell -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v2a2 2 0 01-.553 1.383l-.894.894a1 1 0 00.707 1.707h13.384a1 1 0 00.707-1.707l-.894-.894A2 2 0 0116 10V8a6 6 0 00-6-6zm-3 16a3 3 0 006 0H7z" clip-rule="evenodd" />
+                </svg>
+                <!-- Heroicon: Chat -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.276 8.276 0 01-3.358-.714l-3.96.992a1 1 0 01-1.215-1.215l.993-3.96A8.276 8.276 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-8-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
+                </svg>
+                <a href="{{ user.id }}/profile"><img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto p-4">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
