@@ -1,0 +1,8 @@
+{% for event_data in events %}
+<div class="bg-white shadow-md rounded-lg p-4 mb-4">
+    <h2 class="text-xl font-bold">{{ event_data.event.title }}</h2>
+    <p class="text-gray-600">{{ event_data.event.description }}</p>
+    <p class="text-gray-600">Participants: {{ event_data.participants }}</p>
+    <p class="text-gray-600">Participant IDs: {{ event_data.participants_ids | join(', ') }}</p>
+</div>
+{% endfor %}

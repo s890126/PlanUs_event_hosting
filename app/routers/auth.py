@@ -24,5 +24,5 @@ def login(user_credentials : OAuth2PasswordRequestForm = Depends(), db : Session
     content = "<div>Login successful!</div>"
     response = HTMLResponse(content = content, status_code = status.HTTP_200_OK)
     response.set_cookie(key = "access_token", value = access_token, httponly = True, path = "/")
-    response.headers['hx-redirect'] = '/homepage'
+    response.headers['hx-redirect'] = '/events'
     return response

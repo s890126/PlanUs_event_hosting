@@ -2,7 +2,7 @@ from fastapi import FastAPI, Response, status, HTTPException, Depends, Request, 
 from . import models, schemas, utils, oauth2
 from sqlalchemy.orm import Session
 from .database import engine, get_db
-from .routers import event, user, auth
+from .routers import event, user, auth, attend
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -20,16 +20,12 @@ templates = Jinja2Templates(directory = "templates")
 app.include_router(event.router)
 app.include_router(user.router)
 app.include_router(auth.router)
+app.include_router(attend.router)
 
 @app.get("/loginpage", response_class = HTMLResponse)
 def home(request : Request):
     context = {'request' : request}
     return templates.TemplateResponse("loginpage.html", context)
-
-@app.get("/homepage", response_class = HTMLResponse)
-def index(request : Request, current_user : int = Depends(oauth2.get_current_user)):
-    context = {'request' : request, 'user' : current_user}
-    return templates.TemplateResponse("homepage.html", context)
 
 @app.get("/signup", response_class = HTMLResponse)
 def signup(request : Request):

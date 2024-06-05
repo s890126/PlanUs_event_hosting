@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div hx-get="/events/partial" hx-trigger="load" hx-target="#event-list" hx-swap="innerHTML">
+    <div id="event-list">Loading events...</div>
+</div>
+
+{% endblock %}
+

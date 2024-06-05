@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlanUs</title>
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-900">
@@ -37,11 +38,11 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 cursor-pointer" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.276 8.276 0 01-3.358-.714l-3.96.992a1 1 0 01-1.215-1.215l.993-3.96A8.276 8.276 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-8-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                 </svg>
-                <a href="{{ user.id }}/profile"><img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
+                <a href="/{{ user.id }}/profile"><img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
             </div>
         </div>
     </header>
-    <main class="container mx-auto p-4">
+    <main class="container mx-auto p-4" id="main-content">
         {% block content %}{% endblock %}
     </main>
 </body>

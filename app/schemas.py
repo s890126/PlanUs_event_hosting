@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
+
+
 
 class EventBase(BaseModel):
     title : str
@@ -21,9 +23,24 @@ class EventResponse(BaseModel):
     location : str
     host_id : int
     created_at : datetime
-    
+
     class Config:
         orm_mode = True
+
+class Participant(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+class EventWithParticipants(BaseModel):
+    event : EventResponse
+    participants: int
+    participants_ids: Optional[List[int]]
+
+    class Config:
+        orm_mode = True
+
 
 class User(BaseModel):
     id: int
@@ -58,4 +75,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id : Optional[str] = None
-    
+
+class Attend(BaseModel):
+    event_id : int

@@ -25,3 +25,8 @@ class User(Base):
     school = Column(String)
     bio = Column(String)
     profile_picture = Column(String, nullable = True)
+
+class Attend(Base):
+    __tablename__ = "attends"
+    user_id = Column(Integer, ForeignKey("users.id", ondelete = "CASCADE"), primary_key = True)
+    event_id = Column(Integer, ForeignKey("events.id", ondelete = "CASCADE"), primary_key = True)
