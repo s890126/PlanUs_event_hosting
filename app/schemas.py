@@ -9,7 +9,8 @@ class EventBase(BaseModel):
     description : str
     event_time : datetime
     location : str
-
+    picture: Optional[str] = None
+    
     class Config:
         orm_mode = True
 
@@ -17,12 +18,14 @@ class EventCreate(EventBase):
     pass
 
 class EventResponse(BaseModel):
+    id : int
     title : str
     description : str
     event_time : datetime
     location : str
     host_id : int
     created_at : datetime
+    picture: Optional[str] = None
 
     class Config:
         orm_mode = True

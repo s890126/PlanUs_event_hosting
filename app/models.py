@@ -8,6 +8,7 @@ class Event(Base):
     __tablename__ = 'events'
 
     id = Column(Integer, primary_key = True, nullable = False)
+    picture = Column(String, nullable = True)
     title = Column(String, nullable = False)
     description = Column(String, nullable = False)
     event_time = Column(DateTime, nullable = False)

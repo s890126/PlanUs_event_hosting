@@ -1,8 +1,38 @@
-{% for event_data in events %}
-<div class="bg-white shadow-md rounded-lg p-4 mb-4">
-    <h2 class="text-xl font-bold">{{ event_data.event.title }}</h2>
-    <p class="text-gray-600">{{ event_data.event.description }}</p>
-    <p class="text-gray-600">Participants: {{ event_data.participants }}</p>
-    <p class="text-gray-600">Participant IDs: {{ event_data.participants_ids | join(', ') }}</p>
+<div class="container mx-auto">
+    <div class="flex justify-start items-start">
+        <div class="w-4/5 -ml-16"> <!-- Set the container width to 4/5 of the screen and shift it left with negative margin -->
+            {% for event_data in events %}
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex">
+                {% if event_data.picture %}
+                <div class="w-1/4">
+                    <img src="http://localhost:8000/{{ event_data.event.picture }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
+                </div>
+                {% endif %}
+                <div class="w-3/4 pl-6 flex flex-col justify-between relative">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-4xl font-bold text-gray-800">{{ event_data.event.title }}</h2>
+                            <p class="text-xl text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
+                            <p class="text-xl text-gray-500">Location: {{ event_data.event.location }}</p>
+                            <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
+                            <p class="text-xl text-gray-500">Participants: {{ event_data.participants_emails | join(', ') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-gray-800 font-bold text-2xl">Event Time: {{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-end mt-auto">
+                        <div class="text-gray-600 text-sm">Created at: {{ event_data.event.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                        <form hx-post="/attend" hx-include="[name='event_id']" hx-trigger="submit" hx-swap="outerHTML">
+                            <input type="hidden" id="event_id" name="event_id" value="{{ event_data.event.id }}">
+                            <button type="submit" class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Attend/Unattend
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
-{% endfor %}
