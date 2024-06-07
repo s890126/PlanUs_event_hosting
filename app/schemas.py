@@ -10,6 +10,7 @@ class EventBase(BaseModel):
     event_time : datetime
     location : str
     picture: Optional[str] = None
+    tags: Optional[List[str]] = None
     
     class Config:
         orm_mode = True
@@ -26,6 +27,7 @@ class EventResponse(BaseModel):
     host_id : int
     created_at : datetime
     picture: Optional[str] = None
+    tags: Optional[List[str]] = None
 
     class Config:
         orm_mode = True

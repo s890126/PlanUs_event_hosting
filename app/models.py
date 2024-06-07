@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, ARRAY
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
 
@@ -15,6 +15,7 @@ class Event(Base):
     location = Column(String, nullable = False)
     created_at = Column(DateTime, nullable = False, server_default = text('now()'))
     host_id = Column(Integer, ForeignKey("users.id", ondelete = "CASCADE"), nullable = False)
+    tags = Column(ARRAY(String), nullable = True)
 
 class User(Base):
     __tablename__ = 'users'

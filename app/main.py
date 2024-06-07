@@ -33,6 +33,9 @@ def signup(request : Request):
     context = {'request' : request}
     return templates.TemplateResponse("signuppage.html", context)
 
+@app.get("/create_event", response_class=HTMLResponse)
+def get_create_event_form(request: Request):
+    return templates.TemplateResponse("create_event.html", {"request": request})
 
 @app.get("/{user_id}/general_profile", response_class=HTMLResponse)
 def get_general_profile(user_id: int, request: Request, db: Session = Depends(get_db)):
