@@ -12,9 +12,13 @@
                 <div class="w-3/4 pl-6 flex flex-col justify-between relative">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h2 class="text-4xl font-bold text-gray-800">{{ event_data.event.title }}</h2>
+                            <h2 class="text-2xl font-bold text-gray-800">
+                                <a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
+                                    {{ event_data.event.title }}
+                                </a>
+                            </h2>
                             <p class="text-xl text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
-                            <p class="text-xl text-gray-500">Location: {{ event_data.event.location }}</p>
+                            <p class="text-xl text-gray-500">{{ event_data.event.location }}</p>
                             <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
                             <div class="flex flex-wrap mt-2">
                                 {% for tag in event_data.tags %}
@@ -23,7 +27,7 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-gray-800 font-bold text-2xl">Event Time: {{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p class="text-gray-800 font-bold text-2xl">{{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
                         </div>
                     </div>
                     <div class="flex justify-between items-end mt-auto">
@@ -38,6 +42,7 @@
                 </div>
             </div>
             {% endfor %}
+            
         </div>
         <!-- Sidebar Section for Top 3 Events -->
         <div class="w-1/3 ml-16"> <!-- Increased left margin to move it more to the right -->
@@ -50,9 +55,11 @@
                 </div>
                 {% endif %}
                 <div class="w-3/4 pl-4">
-                    <h3 class="text-xl font-bold text-gray-800">{{ event_data.event.title }}</h3>
+                    <h3 class="text-xl font-bold text-gray-800"><a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
+                        {{ event_data.event.title }}
+                    </a></h3>
                     <p class="text-md text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
-                    <p class="text-md text-gray-500">Location: {{ event_data.event.location }}</p>
+                    <p class="text-md text-gray-500">{{ event_data.event.location }}</p>
                     <p class="text-md text-gray-500">Number of Participants: {{ event_data.participants }}</p>
                     <div class="flex flex-wrap mt-2">
                         {% for tag in event_data.tags %}

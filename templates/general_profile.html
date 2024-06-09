@@ -1,26 +1,18 @@
 {% extends "profile_base.html" %}
 
 {% block content %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>General Profile</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 text-gray-900">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">User Profile</h1>
+<div class="container mx-auto p-6">
+    <div class="bg-white shadow-md rounded-lg p-8 mb-8">
+        <h1 class="text-5xl font-bold text-purple-500 mb-6">User Profile</h1>
         <div class="flex items-center">
-            <img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile Picture" class="h-32 w-32 rounded-full mr-4">
+            <img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile Picture" class="h-48 w-48 rounded-full mr-6 shadow-lg">
             <div>
-                <h2 class="text-xl font-bold">{{ user.email }}</h2>
-                <p>{{ user.bio }}</p>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ user.email }}</h2>
+                <p class="text-2xl text-gray-700 mb-2"><span class="font-semibold">Bio:</br></span> {{ user.bio }}</p>
+                <p class="text-2xl text-gray-700 mb-2"><span class="font-semibold">School:</span> {{ user.school }}</p>
+                <p class="text-2xl text-gray-700"><span class="font-semibold">Birthday:</span> {{ user.birthday }}</p>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
 {% endblock %}

@@ -24,15 +24,16 @@ router.mount("/static", StaticFiles(directory="static"), name="static")
 def get_events_partial(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user),
+    search_query: str = None
 ):
     ParticipantUser = aliased(models.User)
     HostUser = aliased(models.User)
     
     now = datetime.utcnow()  # Get the current time in UTC
     
-    # Query to get all upcoming events
-    results = db.query(
+    # Base query for upcoming events with optional search
+    base_query = db.query(
         models.Event,
         func.count(models.Attend.event_id).label("participants"),
         func.array_agg(ParticipantUser.email).label("participants_emails"),
@@ -47,17 +48,30 @@ def get_events_partial(
     ).join(
         ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
     ).filter(
-        models.Event.event_time >= now  
-    ).group_by(
+        models.Event.event_time >= now
+    )
+    
+    # Apply search filter
+    if search_query:
+        search = f"%{search_query}%"
+        base_query = base_query.filter(
+            (models.Event.title.ilike(search)) |
+            (models.Event.location.ilike(search)) |
+            (models.Event.tags.any(search_query.upper()))
+        )
+    
+    results = base_query.group_by(
         models.Event.id, HostUser.email, models.Event.picture, models.Event.tags
     ).order_by(
-        models.Event.event_time.asc()  
+        models.Event.event_time.asc()
     ).all()
     
-    # Query to get the top three events with the most participants
+    # Separate query for top three events with the most participants, without search filter
     top_events_query = db.query(
         models.Event,
         func.count(models.Attend.event_id).label("participants"),
+        func.array_agg(ParticipantUser.email).label("participants_emails"),
+        func.array_agg(ParticipantUser.id).label("participants_ids"),  # Add participant IDs
         HostUser.email.label("host_email"),
         models.Event.picture,
         models.Event.tags
@@ -65,6 +79,8 @@ def get_events_partial(
         models.Attend, models.Attend.event_id == models.Event.id, isouter=True
     ).join(
         HostUser, HostUser.id == models.Event.host_id
+    ).join(
+        ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
     ).filter(
         models.Event.event_time >= now
     ).group_by(
@@ -93,11 +109,13 @@ def get_events_partial(
         })
     
     top_events_with_participants = []
-    for event, participants, host_email, picture, tags in top_events:
+    for event, participants, participants_emails, participants_ids, host_email, picture, tags in top_events:
         event_response = schemas.EventResponse.from_orm(event)
         top_events_with_participants.append({
             "event": event_response,
             "participants": participants,
+            "participants_emails": participants_emails,
+            "participants_ids": participants_ids,
             "host_email": host_email,
             "picture": picture,
             "tags": tags
@@ -111,42 +129,72 @@ def get_events_partial(
     })
 
 
+
+
+
 @router.get('/', response_class=HTMLResponse)
 def events_page(request: Request, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return templates.TemplateResponse("events.html", {"request": request, "user": current_user})
 
 
-@router.get('/{id}', response_model = schemas.EventWithParticipants)
-def get_event(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.get('/{id}', response_class=HTMLResponse)
+def get_event(
+    id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    ParticipantUser = aliased(models.User, name="participant_user")
+    HostUser = aliased(models.User, name="host_user")
+
     result = db.query(
         models.Event,
         func.count(models.Attend.event_id).label("participants"),
-        func.array_agg(models.Attend.user_id).label("participants_ids")
+        func.array_agg(ParticipantUser.email).label("participants_emails"),
+        func.array_agg(ParticipantUser.id).label("participants_ids"),
+        HostUser.email.label("host_email")  # Get host email
     ).join(
         models.Attend, models.Attend.event_id == models.Event.id, isouter=True
+    ).join(
+        ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
+    ).join(
+        HostUser, HostUser.id == models.Event.host_id
     ).filter(
         models.Event.id == id
     ).group_by(
-        models.Event.id
+        models.Event.id, HostUser.email  # Group by event id and host email
     ).first()
 
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Event with id: {id} was not found.')
 
-    event, participants, participants_ids = result
+    event, participants, participants_emails, participants_ids, host_email = result
     participants_ids = [pid for pid in participants_ids if pid is not None]
+    participants_emails = [email for email in participants_emails if email is not None]
 
     event_response = schemas.EventResponse.from_orm(event)
-    event_with_participants = schemas.EventWithParticipants(
-        event=event_response,
-        participants=participants,
-        participants_ids=participants_ids
-    )
 
-    return event_with_participants
+    # Create zipped data for participants
+    participants_data = list(zip(participants_emails, participants_ids))
+
+    # Check if the current user has attended the event
+    has_attended = current_user.id in participants_ids
+
+    context = {
+        "request": request,
+        "event": event_response,
+        "participants": participants,
+        "participants_data": participants_data,  # Pass the zipped data
+        "host_email": host_email,  # Pass host email to template
+        "has_attended": has_attended  # Pass attendance status
+    }
+
+    return templates.TemplateResponse("event_detail.html", context)
 
 
-@router.post('/create_event', response_class = HTMLResponse)
+
+
+@router.post('/create_event', response_class=HTMLResponse)
 def create_event(
     request: Request,
     title: str = Form(...),
@@ -159,7 +207,7 @@ def create_event(
     current_user: int = Depends(oauth2.get_current_user)
 ):
     event_time = datetime.fromisoformat(event_time)
-    tags_list = [tag.strip() for tag in tags.split(',')] if tags else []
+    tags_list = [tag.strip().upper() for tag in tags.split(',')] if tags else []
     
     new_event = models.Event(
         title=title,
@@ -196,6 +244,7 @@ def create_event(
         db.refresh(new_attendance)
 
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @router.put('/{id}')
 def update_event(id : int, updated_event : schemas.EventCreate, db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user)):
