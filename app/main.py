@@ -54,7 +54,10 @@ def get_profile(user_id: int, request: Request, db: Session = Depends(get_db), c
     if current_user.id != user_id:
         return templates.TemplateResponse("general_profile.html", {"request": request, "user": user})
     
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user})
+    events = db.query(models.Event).filter(models.Event.host_id == user_id).all()
+    
+    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "events": events})
+
 
 @app.post("/{user_id}/upload_profile_picture", response_class=HTMLResponse)
 def upload_profile_picture(

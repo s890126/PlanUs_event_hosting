@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
     <h2 class="text-3xl font-bold mb-6 text-center text-purple-600">Create New Event</h2>
-    <form action="/events/create_event" method="post" enctype="multipart/form-data" class="space-y-6">
+    <form id="create-event-form" action="/events/create_event" method="post" enctype="multipart/form-data" class="space-y-6">
         <div>
             <label for="title" class="block text-lg font-medium text-gray-700">Title</label>
             <input type="text" id="title" name="title" required class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
@@ -15,6 +15,7 @@
         <div>
             <label for="event_time" class="block text-lg font-medium text-gray-700">Event Time</label>
             <input type="datetime-local" id="event_time" name="event_time" required class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
+            <p id="event-time-error" class="mt-2 text-sm text-red-600 hidden">Please select a future date and time.</p>
         </div>
         <div>
             <label for="location" class="block text-lg font-medium text-gray-700">Location</label>
@@ -32,5 +33,22 @@
     </form>
 </div>
 
+<script>
+document.getElementById('create-event-form').addEventListener('submit', function(event) {
+    const eventTimeInput = document.getElementById('event_time');
+    const eventTime = new Date(eventTimeInput.value);
+    const now = new Date();
+    const errorMessage = document.getElementById('event-time-error');
 
+    if (eventTime <= now) {
+        event.preventDefault();
+        errorMessage.classList.remove('hidden');
+        eventTimeInput.classList.add('border-red-500');
+        eventTimeInput.focus();
+    } else {
+        errorMessage.classList.add('hidden');
+        eventTimeInput.classList.remove('border-red-500');
+    }
+});
+</script>
 {% endblock %}

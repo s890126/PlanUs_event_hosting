@@ -244,29 +244,86 @@ def create_event(
         db.refresh(new_attendance)
 
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
+from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Request
+from sqlalchemy.orm import Session
+from datetime import datetime
+import os
+from fastapi.responses import HTMLResponse
 
-
-@router.put('/{id}')
-def update_event(id : int, updated_event : schemas.EventCreate, db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user)):
+@router.post('/update/{id}', response_class=HTMLResponse)
+def update_event_post(
+    id: int,
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(...),
+    event_time: str = Form(...),
+    location: str = Form(...),
+    picture: UploadFile = File(None),
+    current_picture: str = Form(...),
+    tags: str = Form(None),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
     event_query = db.query(models.Event).filter(models.Event.id == id)
     event = event_query.first()
-    if event == None:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"event with id: {id} does not exist.")
+
+    if event is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event with id: {id} does not exist.")
     if event.host_id != current_user.id:
-        raise HTTPException(status_code = status.HTTP_403_FORBIDDEN, detail = f"Not authorized to perform requested action")
-    event_query.update(updated_event.dict(), synchronize_session = False)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+
+    event_time = datetime.fromisoformat(event_time)
+    tags_list = [tag.strip().upper() for tag in tags.split(',')] if tags else []
+
+    update_data = {
+        "title": title,
+        "description": description,
+        "event_time": event_time,
+        "location": location,
+        "tags": tags_list
+    }
+
+    if picture and picture.filename:
+        # Remove the old picture file if it exists and a new picture is provided
+        if current_picture and os.path.exists(current_picture):
+            os.remove(current_picture)
+
+        # Save the new picture
+        picture_filename = f"{event.id}_pic{os.path.splitext(picture.filename)[1]}"
+        picture_path = os.path.join("static/images", picture_filename)
+        with open(picture_path, "wb") as buffer:
+            buffer.write(picture.file.read())
+        update_data["picture"] = f"static/images/{picture_filename}"
+    else:
+        # Keep the old picture if no new picture is uploaded
+        update_data["picture"] = current_picture
+
+
+    print(update_data["picture"], current_picture)
+    event_query.update(update_data, synchronize_session=False)
     db.commit()
 
-    return event_query.first()
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    events = db.query(models.Event).filter(models.Event.host_id == current_user.id).all()
 
-@router.delete("/{id}", status_code = status.HTTP_204_NO_CONTENT)
-def delete_event(id : int, db : Session = Depends(get_db), current_user : int = Depends(oauth2.get_current_user)):
-    event = db.query(models.Event).filter(models.Event.id == id)
-    if event.first() == None:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"event with id: {id} does not exist.")
-    if event.first().host_id != current_user.id:
-        raise HTTPException(status_code = status.HTTP_403_FORBIDDEN, detail = f"Not authorized to perform requested action")
-    event.delete(synchronize_session = False)
+    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "events": events})
+
+
+@router.delete("/delete/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_event(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    event_query = db.query(models.Event).filter(models.Event.id == id)
+    event = event_query.first()
+
+    if event is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event with id: {id} does not exist.")
+    if event.host_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+    if event.picture:
+        os.remove(event.picture)
+    event_query.delete(synchronize_session=False)
     db.commit()
-
-    return Response(status_code = status.HTTP_204_NO_CONTENT)
+    return RedirectResponse(url=f"/{current_user.id}/profile", status_code=status.HTTP_303_SEE_OTHER)
