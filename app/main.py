@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 import shutil
 import os
 from .config import settings
+from datetime import datetime
 
 models.Base.metadata.create_all(bind = engine)
 
@@ -46,7 +47,12 @@ def get_general_profile(user_id: int, request: Request, db: Session = Depends(ge
     return templates.TemplateResponse("general_profile.html", {"request": request, "user": user})
 
 @app.get("/{user_id}/profile", response_class=HTMLResponse)
-def get_profile(user_id: int, request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+def get_profile(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(oauth2.get_current_user)
+):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -55,9 +61,39 @@ def get_profile(user_id: int, request: Request, db: Session = Depends(get_db), c
         return templates.TemplateResponse("general_profile.html", {"request": request, "user": user})
     
     events = db.query(models.Event).filter(models.Event.host_id == user_id).all()
-    
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "events": events})
 
+    # Query for events the user has joined
+    now = datetime.utcnow()
+    joined_events_query = db.query(
+        models.Event.id,
+        models.Event.title,
+        models.Event.event_time,
+        models.Event.location
+    ).join(
+        models.Attend, models.Attend.event_id == models.Event.id
+    ).filter(
+        models.Attend.user_id == current_user.id,
+        models.Event.event_time >= now
+    ).order_by(
+        models.Event.event_time.asc()
+    ).all()
+
+    joined_events = [
+        {
+            "id": event.id,
+            "title": event.title,
+            "event_time": event.event_time,
+            "location": event.location
+        }
+        for event in joined_events_query
+    ]
+
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": user,
+        "events": events,
+        "joined_events": joined_events
+    })
 
 @app.post("/{user_id}/upload_profile_picture", response_class=HTMLResponse)
 def upload_profile_picture(

@@ -31,6 +31,6 @@ def login(user_credentials : OAuth2PasswordRequestForm = Depends(), db : Session
 def logout():
     content = "<div>Logout successful!</div>"
     response = HTMLResponse(content=content, status_code=status.HTTP_200_OK)
-    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key= "access_token", path="/")
     response.headers['hx-redirect'] = '/loginpage'
     return response

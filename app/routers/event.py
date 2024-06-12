@@ -128,10 +128,6 @@ def get_events_partial(
         "user": current_user
     })
 
-
-
-
-
 @router.get('/', response_class=HTMLResponse)
 def events_page(request: Request, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return templates.TemplateResponse("events.html", {"request": request, "user": current_user})
@@ -192,8 +188,6 @@ def get_event(
     return templates.TemplateResponse("event_detail.html", context)
 
 
-
-
 @router.post('/create_event', response_class=HTMLResponse)
 def create_event(
     request: Request,
@@ -244,11 +238,7 @@ def create_event(
         db.refresh(new_attendance)
 
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
-from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Request
-from sqlalchemy.orm import Session
-from datetime import datetime
-import os
-from fastapi.responses import HTMLResponse
+
 
 @router.post('/update/{id}', response_class=HTMLResponse)
 def update_event_post(
