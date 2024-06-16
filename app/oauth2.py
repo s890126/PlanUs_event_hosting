@@ -1,15 +1,16 @@
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from . import schemas, database, models
-from fastapi import Depends, status, HTTPException, Request
+from fastapi import Depends, status, HTTPException, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from .config import settings
 ouath2_scheme = OAuth2PasswordBearer(tokenUrl = "login")
-
+import logging
 # SECRET_KEY
 # ALGORITHM
 # EXPIRATION TIME
+logging.basicConfig(level=logging.INFO)
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
@@ -49,3 +50,34 @@ def get_current_user(request: Request, db: Session = Depends(database.get_db)):
     token = verify_access_token(token, credentials_exception)
     user = db.query(models.User).filter(models.User.id == token.id).first()
     return user
+
+# For WebSocket
+async def get_current_user_ws(websocket: WebSocket, db: Session = Depends(database.get_db)):
+    try:
+        token = websocket.cookies.get("access_token")
+        if not token:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        token = verify_access_token(token, credentials_exception)
+        user = db.query(models.User).filter(models.User.id == token.id).first()
+        if not user:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        logging.info(f"Authenticated user: {user.email}")
+        return user
+    except Exception as e:
+        logging.error(f"Error in get_current_user_ws: {e}")
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)

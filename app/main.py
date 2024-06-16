@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, Request, UploadFile, File, Form
+from fastapi import FastAPI, Response, status, HTTPException, Depends, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from . import models, schemas, utils, oauth2
 from sqlalchemy.orm import Session
 from .database import engine, get_db
@@ -10,6 +10,9 @@ import shutil
 import os
 from .config import settings
 from datetime import datetime
+from typing import Dict, List
+import logging
+
 
 models.Base.metadata.create_all(bind = engine)
 
@@ -23,6 +26,62 @@ app.include_router(event.router)
 app.include_router(user.router)
 app.include_router(auth.router)
 app.include_router(attend.router)
+
+logging.basicConfig(level=logging.INFO)
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logging.info(f"WebSocket connected: {websocket.client}")
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        logging.info(f"WebSocket disconnected: {websocket.client}")
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+                logging.info(f"Broadcasting message: {message} to {connection.client}")
+            except RuntimeError as e:
+                logging.error(f"Failed to send message to {connection.client}: {e}")
+                self.disconnect(connection)
+                logging.info(f"Removed closed connection: {connection.client}")
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/{event_id}")
+async def websocket_endpoint(websocket: WebSocket, event_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user_ws)):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logging.info(f"Received message: {data} from user: {current_user.email}")
+            message = models.Message(content=data, user_id=current_user.id, event_id=event_id)
+            
+            logging.info(f"Creating message: {message}")
+            
+            db.add(message)
+            db.commit()
+            
+            logging.info(f"Message committed: {message}")
+            
+            db.refresh(message)
+            
+            logging.info(f"Message refreshed: {message}")
+            
+            await manager.broadcast(f"{current_user.email}: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        if websocket.client_state == "CONNECTED":
+            await websocket.send_text(f"Error: {str(e)}")
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
 
 @app.get("/loginpage", response_class = HTMLResponse)
 def home(request : Request):
@@ -151,3 +210,13 @@ def update_profile(
     db.refresh(user)
 
     return templates.TemplateResponse("profile.html", {"request": request, "user": user})
+
+@app.get("/chatrooms", response_class=HTMLResponse)
+def user_chatrooms(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    chatrooms = (
+        db.query(models.Event)
+        .join(models.Attend, models.Attend.event_id == models.Event.id)
+        .filter(models.Attend.user_id == current_user.id)
+        .all()
+    )
+    return templates.TemplateResponse("chatrooms.html", {"request": request, "chatrooms": chatrooms})

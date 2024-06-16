@@ -1,0 +1,27 @@
+{% extends "profile_base.html" %}
+
+{% block content %}
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Your Chat Rooms</h1>
+        <ul class="list-disc list-inside bg-white p-4 mb-4 rounded shadow-md">
+            {% for chatroom in chatrooms %}
+                <li class="mb-2">
+                    <a href="events/{{ chatroom.id }}/chat" 
+                       class="text-blue-500 hover:underline"
+                       hx-get="events/{{ chatroom.id }}/chat" 
+                       hx-target="#chatContent" 
+                       hx-swap="innerHTML">
+                       {{ chatroom.title }}
+                    </a>
+                </li>
+            {% else %}
+                <p class="text-gray-600">You have not joined any chat rooms yet.</p>
+            {% endfor %}
+        </ul>
+        
+        <!-- Container where the chat content will be loaded -->
+        <div id="chatContent" class="mt-4"></div>
+    </div>
+</body>
+{% endblock %}

@@ -1,0 +1,68 @@
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4 text-center">{{event_title}}</h1>
+    <div id="messages" class="bg-gray-100 p-4 mb-4 rounded shadow-md h-64 overflow-y-scroll"></div>
+    <form id="messageForm" class="flex">
+        <input id="messageInput" class="border p-2 flex-grow rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" placeholder="Type a message">
+        <button class="bg-purple-400 text-white p-2 rounded-r hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-blue-500" type="submit">Send</button>
+    </form>
+</div>
+
+<script>
+    (function() {
+        const event_id = "{{ event_id }}";
+        
+        const ws = new WebSocket(`ws://${window.location.host}/ws/${event_id}`);
+        const messagesDiv = document.getElementById('messages');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+
+        ws.onmessage = function(event) {
+            const message = document.createElement('div');
+            message.className = 'message p-2 mb-2 bg-white rounded shadow max-w-sm'; // Added Tailwind CSS class
+            const currentTime = new Date().toLocaleString();
+            message.textContent = `${event.data} [${currentTime}]`;
+            messagesDiv.appendChild(message);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
+            console.log("Received message: " + event.data); // Debugging information
+        };
+
+        messageForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const message = messageInput.value;
+            if (message.trim() !== "") {
+                ws.send(message);
+                messageInput.value = '';
+                console.log("Sent message: " + message); // Debugging information
+            }
+        });
+
+        ws.onopen = function() {
+            console.log("WebSocket connection established");
+        };
+
+        ws.onclose = function() {
+            console.log("WebSocket connection closed");
+        };
+
+        ws.onerror = function(error) {
+            console.log("WebSocket error: " + error.message);
+        };
+
+        // Fetch and display previous messages
+        async function fetchMessages() {
+            const response = await fetch(`/events/${event_id}/messages`);
+            const messages = await response.json();
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message p-2 mb-2 bg-white rounded shadow max-w-sm'; // Added Tailwind CSS class
+                const timestamp = new Date(message.timestamp).toLocaleString();
+                messageDiv.textContent = `${message.email}: ${message.content} [${timestamp}]`;
+                messagesDiv.appendChild(messageDiv);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
+        }
+
+        // Call the function to fetch and display previous messages
+        fetchMessages();
+    })();
+</script>

@@ -1,6 +1,6 @@
 from .. import models, schemas
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Request, Form, File, UploadFile
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import Session
 from ..database import get_db
@@ -317,3 +317,32 @@ def delete_event(
     event_query.delete(synchronize_session=False)
     db.commit()
     return RedirectResponse(url=f"/{current_user.id}/profile", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/{event_id}/chat", response_class=HTMLResponse)
+def event_chat(request: Request, event_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    attendance = db.query(models.Attend).filter(
+        models.Attend.event_id == event_id,
+        models.Attend.user_id == current_user.id
+    ).first()
+
+    if not attendance:
+        raise HTTPException(status_code=403, detail="You are not allowed to access this chat")
+
+    return templates.TemplateResponse("chat.html", {"request": request, "event_id": event_id, "event_title": event.title, "current_user": current_user})
+
+
+@router.get("/{event_id}/messages", response_class=JSONResponse)
+def get_event_messages(event_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    messages = (
+        db.query(models.Message.content, models.Message.timestamp, models.User.email)
+        .join(models.User, models.Message.user_id == models.User.id)
+        .filter(models.Message.event_id == event_id)
+        .order_by(models.Message.timestamp.asc())
+        .all()
+    )
+    return [ {"content": message.content, "timestamp": message.timestamp, "email": message.email} for message in messages ]
