@@ -339,10 +339,14 @@ def event_chat(request: Request, event_id: int, db: Session = Depends(get_db), c
 @router.get("/{event_id}/messages", response_class=JSONResponse)
 def get_event_messages(event_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     messages = (
-        db.query(models.Message.content, models.Message.timestamp, models.User.email)
+        db.query(models.Message.content, models.Message.timestamp, models.User.email, models.User.id.label('user_id'))
         .join(models.User, models.Message.user_id == models.User.id)
         .filter(models.Message.event_id == event_id)
         .order_by(models.Message.timestamp.asc())
         .all()
     )
-    return [ {"content": message.content, "timestamp": message.timestamp, "email": message.email} for message in messages ]
+    return {
+        "messages": [ {"content": message.content, "timestamp": message.timestamp, "email": message.email, "user_id": message.user_id} for message in messages ],
+        "current_user_email": current_user.email,
+        "current_user_id": current_user.id
+    }

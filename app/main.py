@@ -12,7 +12,7 @@ from .config import settings
 from datetime import datetime
 from typing import Dict, List
 import logging
-
+import json
 
 models.Base.metadata.create_all(bind = engine)
 
@@ -29,6 +29,7 @@ app.include_router(attend.router)
 
 logging.basicConfig(level=logging.INFO)
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -39,14 +40,16 @@ class ConnectionManager:
         logging.info(f"WebSocket connected: {websocket.client}")
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        logging.info(f"WebSocket disconnected: {websocket.client}")
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+            logging.info(f"WebSocket disconnected: {websocket.client}")
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: dict):
+        message_json = json.dumps(message)
         for connection in self.active_connections:
             try:
-                await connection.send_text(message)
-                logging.info(f"Broadcasting message: {message} to {connection.client}")
+                await connection.send_text(message_json)
+                logging.info(f"Broadcasting message: {message_json} to {connection.client}")
             except RuntimeError as e:
                 logging.error(f"Failed to send message to {connection.client}: {e}")
                 self.disconnect(connection)
@@ -61,7 +64,9 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int, db: Session = 
         while True:
             data = await websocket.receive_text()
             logging.info(f"Received message: {data} from user: {current_user.email}")
-            message = models.Message(content=data, user_id=current_user.id, event_id=event_id)
+            
+            parsed_data = json.loads(data)
+            message = models.Message(content=parsed_data['content'], user_id=current_user.id, event_id=event_id)
             
             logging.info(f"Creating message: {message}")
             
@@ -74,15 +79,20 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int, db: Session = 
             
             logging.info(f"Message refreshed: {message}")
             
-            await manager.broadcast(f"{current_user.email}: {data}")
+            await manager.broadcast({
+                "content": parsed_data['content'],
+                "email": current_user.email,
+                "user_id": current_user.id
+            })
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         if websocket.client_state == "CONNECTED":
-            await websocket.send_text(f"Error: {str(e)}")
+            await websocket.send_text(json.dumps({"error": str(e)}))
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
 
+        
 @app.get("/loginpage", response_class = HTMLResponse)
 def home(request : Request):
     context = {'request' : request}
@@ -219,4 +229,4 @@ def user_chatrooms(request: Request, db: Session = Depends(get_db), current_user
         .filter(models.Attend.user_id == current_user.id)
         .all()
     )
-    return templates.TemplateResponse("chatrooms.html", {"request": request, "chatrooms": chatrooms})
+    return templates.TemplateResponse("chatrooms.html", {"request": request, "chatrooms": chatrooms, "current_user": current_user})
