@@ -11,6 +11,17 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 import os
 from fastapi.staticfiles import StaticFiles
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+def auto_generate_tags(description):
+    doc = nlp(description)
+    entity_labels = ["PERSON", "ORG", "GPE", "EVENT", "NORP", "MONEY", "WORK_OF_ART", "LANGUAGE", "FAC", "PRODUCT", "LOC"]
+    tags = [ent.text for ent in doc.ents if ent.label_ in entity_labels]
+    
+    
+    return list(set(tags))  # Remove duplicates
 
 router = APIRouter(
     prefix = "/events",
@@ -201,7 +212,19 @@ def create_event(
     current_user: int = Depends(oauth2.get_current_user)
 ):
     event_time = datetime.fromisoformat(event_time)
-    tags_list = [tag.strip().upper() for tag in tags.split(',')] if tags else []
+    
+    auto_tags = auto_generate_tags(description)
+    print("Auto-generated tags:", auto_tags)  # Debugging
+    
+    # Combine provided tags with auto-generated tags
+    if tags:
+        provided_tags = [tag.strip().upper() for tag in tags.split(',')]
+    else:
+        provided_tags = []
+    
+    # Combine and remove duplicates while ensuring all tags are uppercase and without quotation marks
+    tags_set = set(provided_tags + auto_tags)
+    tags_list = [tag.upper() for tag in tags_set]
     
     new_event = models.Event(
         title=title,
@@ -238,7 +261,6 @@ def create_event(
         db.refresh(new_attendance)
 
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
-
 
 @router.post('/update/{id}', response_class=HTMLResponse)
 def update_event_post(

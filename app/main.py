@@ -9,14 +9,26 @@ from fastapi.templating import Jinja2Templates
 import shutil
 import os
 from .config import settings
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List
 import logging
 import json
+from fastapi.middleware.cors import CORSMiddleware
+
 
 models.Base.metadata.create_all(bind = engine)
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -92,7 +104,7 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int, db: Session = 
             await websocket.send_text(json.dumps({"error": str(e)}))
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
 
-        
+
 @app.get("/loginpage", response_class = HTMLResponse)
 def home(request : Request):
     context = {'request' : request}
@@ -223,10 +235,12 @@ def update_profile(
 
 @app.get("/chatrooms", response_class=HTMLResponse)
 def user_chatrooms(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    three_days_ago = datetime.utcnow() - timedelta(days=3)
     chatrooms = (
         db.query(models.Event)
         .join(models.Attend, models.Attend.event_id == models.Event.id)
         .filter(models.Attend.user_id == current_user.id)
+        .filter(models.Event.event_time >= three_days_ago)  # Ensure date is in the future or within the last 3 days
         .all()
     )
     return templates.TemplateResponse("chatrooms.html", {"request": request, "chatrooms": chatrooms, "current_user": current_user})

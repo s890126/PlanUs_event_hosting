@@ -22,7 +22,7 @@
                             <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
                             <div class="flex flex-wrap mt-2">
                                 {% for tag in event_data.tags %}
-                                <span class="bg-purple-200 text-purple-700 text-sm2 font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
+                                <span class="bg-purple-200 text-purple-700 text-sm2 mt-2 font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
                                 {% endfor %}
                             </div>
                         </div>
@@ -61,11 +61,7 @@
                     <p class="text-md text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
                     <p class="text-md text-gray-500">{{ event_data.event.location }}</p>
                     <p class="text-md text-gray-500">Number of Participants: {{ event_data.participants }}</p>
-                    <div class="flex flex-wrap mt-2">
-                        {% for tag in event_data.tags %}
-                        <span class="bg-purple-200 text-purple-700 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
+ 
                     <p class="text-gray-800 font-bold text-md mt-2">Event Time: {{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
                 </div>
             </div>
