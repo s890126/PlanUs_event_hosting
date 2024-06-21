@@ -13,7 +13,7 @@ class EventBase(BaseModel):
     tags: Optional[List[str]] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class EventCreate(EventBase):
     pass
@@ -30,13 +30,13 @@ class EventResponse(BaseModel):
     tags: Optional[List[str]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Participant(BaseModel):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class EventWithParticipants(BaseModel):
     event : EventResponse
@@ -44,7 +44,7 @@ class EventWithParticipants(BaseModel):
     participants_ids: Optional[List[int]]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class User(BaseModel):
@@ -53,7 +53,7 @@ class User(BaseModel):
     profile_picture: str = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserCreate(BaseModel):
     email : EmailStr
@@ -68,7 +68,7 @@ class UserOut(BaseModel):
     bio : Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserLogin(BaseModel):
     email : EmailStr
@@ -79,7 +79,7 @@ class Token(BaseModel):
     token_type : str
 
 class TokenData(BaseModel):
-    id : Optional[str] = None
+    id : str
 
 class Attend(BaseModel):
     event_id : int
