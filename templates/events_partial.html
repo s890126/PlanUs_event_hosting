@@ -6,7 +6,7 @@
             <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex">
                 {% if event_data.picture %}
                 <div class="w-1/4">
-                    <img src="http://localhost:8000/{{ event_data.event.picture }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
+                    <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
                 </div>
                 {% endif %}
                 <div class="w-3/4 pl-6 flex flex-col justify-between relative">
@@ -51,7 +51,7 @@
             <div class="bg-white shadow-md rounded-lg p-4 mb-4 flex">
                 {% if event_data.picture %}
                 <div class="w-2/4">
-                    <img src="http://localhost:8000/{{ event_data.event.picture }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
+                    <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
                 </div>
                 {% endif %}
                 <div class="w-3/4 pl-4">

@@ -140,11 +140,14 @@ def get_profile(
 
     if current_user.id != user_id:
         return templates.TemplateResponse("general_profile.html", {"request": request, "user": user})
-    
-    events = db.query(models.Event).filter(models.Event.host_id == user_id).all()
 
-    # Query for events the user has joined
     now = datetime.utcnow()
+
+    events = db.query(models.Event).filter(
+        models.Event.host_id == user_id,
+        models.Event.event_time >= now  # Ensure only upcoming events
+    ).all()
+
     joined_events_query = db.query(
         models.Event.id,
         models.Event.title,
@@ -154,7 +157,7 @@ def get_profile(
         models.Attend, models.Attend.event_id == models.Event.id
     ).filter(
         models.Attend.user_id == current_user.id,
-        models.Event.event_time >= now
+        models.Event.event_time >= now  # Ensure only upcoming events
     ).order_by(
         models.Event.event_time.asc()
     ).all()

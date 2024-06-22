@@ -12,6 +12,7 @@ from datetime import datetime
 import os
 from fastapi.staticfiles import StaticFiles
 import spacy
+from ..config import settings 
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -136,7 +137,8 @@ def get_events_partial(
         "request": request,
         "events": events_with_participants,
         "top_events": top_events_with_participants,
-        "user": current_user
+        "user": current_user,
+        "base_url": settings.base_url
     })
 
 @router.get('/', response_class=HTMLResponse)

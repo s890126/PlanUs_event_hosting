@@ -11,7 +11,7 @@
     <header class="bg-purple-400 text-white fixed w-full z-10">
         <div class="container mx-auto flex items-center justify-between p-4">
             <div class="flex items-center">
-                <img src="/static/images/logo.png" alt="Logo" class="h-8 mr-2">
+                <img src="{{ url_for('static', path='images/logo.png') }}" alt="Logo" class="h-8 mr-2">
                 <a href="/events" class="text-3xl font-bold">PlanUs</a>
             </div>
             <div class="flex-grow mx-4">
@@ -38,7 +38,11 @@
                     <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.276 8.276 0 01-3.358-.714l-3.96.992a1 1 0 01-1.215-1.215l.993-3.96A8.276 8.276 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-8-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                 </svg>
                 </a>
-                <a href="/{{ user.id }}/profile"><img src="http://localhost:8000/{{ user.profile_picture }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
+                {% if user.profile_picture %}
+                    <a href="/{{ user.id }}/profile"><img src="{{ url_for('static', path=user.profile_picture.replace('static/', '')) }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
+                {% else %}
+                    <a href="/{{ user.id }}/profile"><img src="{{ url_for('static', path='images/default_profile_picture.jpg') }}" alt="Profile" class="h-8 w-8 rounded-full cursor-pointer"></a>
+                {% endif %}
             </div>
         </div>
     </header>
