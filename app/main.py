@@ -3,7 +3,7 @@ from . import models, schemas, utils, oauth2
 from sqlalchemy.orm import Session
 from .database import engine, get_db
 from .routers import event, user, auth, attend
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import shutil
@@ -211,7 +211,7 @@ def upload_profile_picture(
     db.commit()
     db.refresh(user)
 
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user})
+    return RedirectResponse(url=f"/{user_id}/profile", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/{user_id}/update", response_class=HTMLResponse)
 def update_profile(
