@@ -116,8 +116,9 @@ def signup(request : Request):
     return templates.TemplateResponse("signuppage.html", context)
 
 @app.get("/create_event", response_class=HTMLResponse)
-def get_create_event_form(request: Request):
-    return templates.TemplateResponse("create_event.html", {"request": request})
+def get_create_event_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    users = db.query(models.User).filter(models.User.email != current_user.email).all()
+    return templates.TemplateResponse("create_event.html", {"request": request, "users": users, "current_user": current_user})
 
 @app.get("/{user_id}/general_profile", response_class=HTMLResponse)
 def get_general_profile(user_id: int, request: Request, db: Session = Depends(get_db)):
@@ -172,11 +173,22 @@ def get_profile(
         for event in joined_events_query
     ]
 
+    # Get all users excluding the current user
+    all_users = db.query(models.User).filter(models.User.id != current_user.id).all()
+
+    # Prepare a dictionary to hold non-invited users for each event
+    non_invited_users = {}
+    for event in events:
+        invited_user_ids = db.query(models.Invitation.user_id).filter(models.Invitation.event_id == event.id).all()
+        invited_user_ids = [user_id for (user_id,) in invited_user_ids]
+        non_invited_users[event.id] = [user for user in all_users if user.id not in invited_user_ids]
+
     return templates.TemplateResponse("profile.html", {
         "request": request,
         "user": user,
         "events": events,
-        "joined_events": joined_events
+        "joined_events": joined_events,
+        "non_invited_users": non_invited_users
     })
 
 @app.post("/{user_id}/upload_profile_picture", response_class=HTMLResponse)

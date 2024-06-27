@@ -36,6 +36,7 @@
         <h3 class="text-2xl font-bold text-gray-800"><a href="/events/{{ event.id }}">{{ event.title }}</a></h3>
         <form action="/events/update/{{ event.id }}" method="post" enctype="multipart/form-data" class="space-y-4 mb-4">
             <input type="hidden" name="current_picture" value="{{ event.picture }}">
+            <input type="hidden" name="public" value="{{ event.public }}">  <!-- Hidden field for public status -->
             <div>
                 <label for="title-{{ event.id }}" class="block text-sm font-medium text-gray-700">Title</label>
                 <input type="text" id="title-{{ event.id }}" name="title" value="{{ event.title }}" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -60,6 +61,23 @@
                 <label for="tags-{{ event.id }}" class="block text-sm font-medium text-gray-700">Tags (comma separated)</label>
                 <input type="text" id="tags-{{ event.id }}" name="tags" value="{{ event.tags | join(', ') }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
             </div>
+            {% if not event.public %}
+            <div>
+                <label for="new_invitees-{{ event.id }}" class="block text-sm font-medium text-gray-700">Add Invitees</label>
+                <div id="new_invitees-{{ event.id }}" class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                    {% if non_invited_users[event.id] is defined %}
+                        {% for user in non_invited_users[event.id] %}
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" id="new_invitee-{{ event.id }}-{{ user.email }}" name="new_invitees" value="{{ user.email }}" class="mr-2">
+                            <label for="new_invitee-{{ event.id }}-{{ user.email }}" class="text-lg text-gray-700">{{ user.name }} ({{ user.email }})</label>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-600">No users available for invitation.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
             <button type="submit" class="bg-purple-400 text-white py-2 px-4 rounded">Update Event</button>
         </form>
         <div class="absolute bottom-4 right-4">
@@ -84,8 +102,6 @@
     {% else %}
     <p class="text-gray-600">You have not joined any events yet.</p>
     {% endif %}
-    
-    
 </div>
 
 <div id="confirmation-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center hidden">

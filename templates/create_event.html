@@ -25,15 +25,42 @@
             <label for="picture" class="block text-lg font-medium text-gray-700">Picture (jpg or png)</label>
             <input type="file" id="picture" name="picture" class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
         </div>
-            <div>
+        <div>
             <label for="tags" class="block text-lg font-medium text-gray-700">Tags (comma separated)</label>
             <input type="text" id="tags" name="tags" class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
+        </div>
+        <div>
+            <label for="public" class="block text-lg font-medium text-gray-700">Event Visibility</label>
+            <select id="public" name="public" required class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                <option value="true">Public</option>
+                <option value="false">Private</option>
+            </select>
+        </div>
+        <div id="invitees-container" class="hidden">
+            <label for="invitees" class="block text-lg font-medium text-gray-700">Invitees</label>
+            <div id="invitees" class="mt-2 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                {% for user in users %}
+                <div class="flex items-center mb-2">
+                    <input type="checkbox" id="invitee-{{ user.email }}" name="invitees" value="{{ user.email }}" class="mr-2">
+                    <label for="invitee-{{ user.email }}" class="text-lg text-gray-700">{{ user.name }} ({{ user.email }})</label>
+                </div>
+                {% endfor %}
+            </div>
         </div>
         <button type="submit" class="w-full bg-purple-400 text-white font-bold py-3 px-6 rounded-md hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">Create Event</button>
     </form>
 </div>
 
 <script>
+document.getElementById('public').addEventListener('change', function(event) {
+    const inviteesContainer = document.getElementById('invitees-container');
+    if (event.target.value === 'false') {
+        inviteesContainer.classList.remove('hidden');
+    } else {
+        inviteesContainer.classList.add('hidden');
+    }
+});
+
 document.getElementById('create-event-form').addEventListener('submit', function(event) {
     const eventTimeInput = document.getElementById('event_time');
     const eventTime = new Date(eventTimeInput.value);

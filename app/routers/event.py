@@ -32,36 +32,60 @@ router = APIRouter(
 templates = Jinja2Templates(directory = "templates")
 router.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @router.get('/partial', response_class=HTMLResponse)
 def get_events_partial(
     request: Request,
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
-    search_query: str = None
+    search_query: str = None,
+    event_type: str = "public"  # New query parameter to distinguish between public and invited events
 ):
     ParticipantUser = aliased(models.User)
     HostUser = aliased(models.User)
     
     now = datetime.utcnow()  # Get the current time in UTC
     
-    # Base query for upcoming events with optional search
-    base_query = db.query(
-        models.Event,
-        func.count(models.Attend.event_id).label("participants"),
-        func.array_agg(ParticipantUser.email).label("participants_emails"),
-        func.array_agg(ParticipantUser.id).label("participants_ids"),  # Add participant IDs
-        HostUser.email.label("host_email"),
-        models.Event.picture,
-        models.Event.tags
-    ).join(
-        models.Attend, models.Attend.event_id == models.Event.id, isouter=True
-    ).join(
-        HostUser, HostUser.id == models.Event.host_id
-    ).join(
-        ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
-    ).filter(
-        models.Event.event_time >= now
-    )
+    # Determine if we are fetching public or invited events
+    if event_type == "invited":
+        invited_event_ids = db.query(models.Invitation.event_id).filter(models.Invitation.user_id == current_user.id)
+        base_query = db.query(
+            models.Event,
+            func.count(models.Attend.event_id).label("participants"),
+            func.array_agg(ParticipantUser.email).label("participants_emails"),
+            func.array_agg(ParticipantUser.id).label("participants_ids"),  # Add participant IDs
+            HostUser.email.label("host_email"),
+            models.Event.picture,
+            models.Event.tags
+        ).join(
+            models.Attend, models.Attend.event_id == models.Event.id, isouter=True
+        ).join(
+            HostUser, HostUser.id == models.Event.host_id
+        ).join(
+            ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
+        ).filter(
+            models.Event.event_time >= now,
+            models.Event.id.in_(invited_event_ids)  # Filter for invited events
+        )
+    else:
+        base_query = db.query(
+            models.Event,
+            func.count(models.Attend.event_id).label("participants"),
+            func.array_agg(ParticipantUser.email).label("participants_emails"),
+            func.array_agg(ParticipantUser.id).label("participants_ids"),  # Add participant IDs
+            HostUser.email.label("host_email"),
+            models.Event.picture,
+            models.Event.tags
+        ).join(
+            models.Attend, models.Attend.event_id == models.Event.id, isouter=True
+        ).join(
+            HostUser, HostUser.id == models.Event.host_id
+        ).join(
+            ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
+        ).filter(
+            models.Event.event_time >= now,
+            models.Event.public == True  # Filter for public events
+        )
     
     # Apply search filter
     if search_query:
@@ -78,7 +102,7 @@ def get_events_partial(
         models.Event.event_time.asc()
     ).all()
     
-    # Separate query for top three events with the most participants, without search filter
+    # Separate query for top three public events with the most participants, without search filter
     top_events_query = db.query(
         models.Event,
         func.count(models.Attend.event_id).label("participants"),
@@ -94,7 +118,8 @@ def get_events_partial(
     ).join(
         ParticipantUser, ParticipantUser.id == models.Attend.user_id, isouter=True
     ).filter(
-        models.Event.event_time >= now
+        models.Event.event_time >= now,
+        models.Event.public == True  # Filter for public events
     ).group_by(
         models.Event.id, HostUser.email, models.Event.picture, models.Event.tags
     ).order_by(
@@ -138,8 +163,10 @@ def get_events_partial(
         "events": events_with_participants,
         "top_events": top_events_with_participants,
         "user": current_user,
-        "base_url": settings.base_url
+        "base_url": settings.base_url,
+        "event_type": event_type  # Pass the event type to the template
     })
+
 
 @router.get('/', response_class=HTMLResponse)
 def events_page(request: Request, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -200,7 +227,6 @@ def get_event(
 
     return templates.TemplateResponse("event_detail.html", context)
 
-
 @router.post('/create_event', response_class=HTMLResponse)
 def create_event(
     request: Request,
@@ -210,6 +236,8 @@ def create_event(
     location: str = Form(...),
     picture: UploadFile = File(None),
     tags: str = Form(None),
+    public: bool = Form(...),  # New field for public/private event
+    invitees: list[str] = Form(None),  # Updated field for invitees to be a list
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -235,7 +263,8 @@ def create_event(
         location=location,
         picture=None,  # Temporarily set to None
         tags=tags_list,
-        host_id=current_user.id
+        host_id=current_user.id,
+        public=public  # Set the public field
     )
     db.add(new_event)
     db.commit()
@@ -262,7 +291,17 @@ def create_event(
         db.commit()
         db.refresh(new_attendance)
 
+    # Handle invitees for private events
+    if not public and invitees:
+        for email in invitees:
+            user = db.query(models.User).filter(models.User.email == email).first()
+            if user:
+                new_invitation = models.Invitation(event_id=new_event.id, user_id=user.id)
+                db.add(new_invitation)
+        db.commit()
+
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @router.post('/update/{id}', response_class=HTMLResponse)
 def update_event_post(
@@ -275,6 +314,8 @@ def update_event_post(
     picture: UploadFile = File(None),
     current_picture: str = Form(...),
     tags: str = Form(None),
+    public: bool = Form(...),  # Field for public/private status
+    new_invitees: list[str] = Form([]),  # Updated field for new invitees to be a list
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -294,7 +335,8 @@ def update_event_post(
         "description": description,
         "event_time": event_time,
         "location": location,
-        "tags": tags_list
+        "tags": tags_list,
+        "public": public  # Update public status
     }
 
     if picture and picture.filename:
@@ -312,16 +354,39 @@ def update_event_post(
         # Keep the old picture if no new picture is uploaded
         update_data["picture"] = current_picture
 
-
-    print(update_data["picture"], current_picture)
     event_query.update(update_data, synchronize_session=False)
     db.commit()
+
+    # Add new invitees only for private events
+    if not public and new_invitees:
+        for email in new_invitees:
+            user = db.query(models.User).filter(models.User.email == email).first()
+            if user:
+                existing_invitation = db.query(models.Invitation).filter(models.Invitation.event_id == id, models.Invitation.user_id == user.id).first()
+                if not existing_invitation:
+                    new_invitation = models.Invitation(event_id=id, user_id=user.id)
+                    db.add(new_invitation)
+        db.commit()
 
     user = db.query(models.User).filter(models.User.id == current_user.id).first()
     events = db.query(models.Event).filter(models.Event.host_id == current_user.id).all()
 
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "events": events})
+    # Get all users excluding the current user
+    all_users = db.query(models.User).filter(models.User.id != current_user.id).all()
 
+    # Prepare a dictionary to hold non-invited users for each event
+    non_invited_users = {}
+    for event in events:
+        invited_user_ids = db.query(models.Invitation.user_id).filter(models.Invitation.event_id == event.id).all()
+        invited_user_ids = [user_id for (user_id,) in invited_user_ids]
+        non_invited_users[event.id] = [user for user in all_users if user.id not in invited_user_ids]
+
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": user,
+        "events": events,
+        "non_invited_users": non_invited_users
+    })
 
 @router.delete("/delete/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(

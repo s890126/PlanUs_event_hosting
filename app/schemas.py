@@ -11,7 +11,8 @@ class EventBase(BaseModel):
     location : str
     picture: Optional[str] = None
     tags: Optional[List[str]] = None
-    
+    public: bool = True
+
     class Config:
         from_attributes = True
 
@@ -83,3 +84,25 @@ class TokenData(BaseModel):
 
 class Attend(BaseModel):
     event_id : int
+
+class InvitationBase(BaseModel):
+    event_id: int
+    user_id: int
+    accepted: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+
+class InvitationCreate(InvitationBase):
+    pass
+
+class InvitationResponse(BaseModel):
+    id: int
+    event_id: int
+    user_id: int
+    invited_at: datetime
+    accepted: bool
+
+    class Config:
+        from_attributes = True
