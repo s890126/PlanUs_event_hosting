@@ -401,7 +401,7 @@ def delete_event(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event with id: {id} does not exist.")
     if event.host_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
-    if event.picture:
+    if event.picture and os.path.exists(event.picture):
         os.remove(event.picture)
     event_query.delete(synchronize_session=False)
     db.commit()
