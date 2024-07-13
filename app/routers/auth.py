@@ -32,5 +32,5 @@ def logout():
     content = "<div>Logout successful!</div>"
     response = HTMLResponse(content=content, status_code=status.HTTP_200_OK)
     response.delete_cookie(key= "access_token", path="/")
-    response.headers['hx-redirect'] = '/loginpage'
+    response.headers['hx-redirect'] = '/'
     return response
