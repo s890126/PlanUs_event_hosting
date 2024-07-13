@@ -105,7 +105,7 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int, db: Session = 
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
 
 
-@app.get("/loginpage", response_class = HTMLResponse)
+@app.get("/", response_class = HTMLResponse)
 def home(request : Request):
     context = {'request' : request}
     return templates.TemplateResponse("loginpage.html", context)
