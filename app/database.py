@@ -4,6 +4,16 @@ from sqlalchemy.orm import sessionmaker
 from .config import settings
 import os
 
+# Ensure all required environment variables are set
+required_env_vars = [
+    'DATABASE_USERNAME', 'DATABASE_PASSWORD', 'DATABASE_HOSTNAME',
+    'DATABASE_PORT', 'DATABASE_NAME'
+]
+for var in required_env_vars:
+    if var not in os.environ:
+        raise EnvironmentError(f"Environment variable {var} is not set")
+
+# Construct the database URL
 SQLALCHEMY_DATABASE_URL = (
     f"postgresql://{os.getenv('DATABASE_USERNAME')}:"
     f"{os.getenv('DATABASE_PASSWORD')}@"
