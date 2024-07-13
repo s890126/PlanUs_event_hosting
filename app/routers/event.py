@@ -18,7 +18,7 @@ nlp = spacy.load("en_core_web_sm")
 
 def auto_generate_tags(description):
     doc = nlp(description)
-    entity_labels = ["PERSON", "ORG", "GPE", "EVENT", "NORP", "MONEY", "WORK_OF_ART", "LANGUAGE", "FAC", "PRODUCT", "LOC"]
+    entity_labels = ["PERSON", "ORG", "GPE", "EVENT", "NORP", "WORK_OF_ART", "LANGUAGE", "FAC", "PRODUCT", "LOC"]
     tags = [ent.text for ent in doc.ents if ent.label_ in entity_labels]
     
     
