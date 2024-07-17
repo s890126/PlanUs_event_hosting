@@ -18,7 +18,7 @@ class Event(Base):
     tags = Column(ARRAY(String), nullable=True)
     public = Column(Boolean, nullable=False, default=True)
     messages = relationship("Message", back_populates="event", cascade="all, delete-orphan")
-    invitations = relationship("Invitation", back_populates="event")
+    invitations = relationship("Invitation", back_populates="event", cascade="all, delete-orphan")
 
 class User(Base):
     __tablename__ = 'users'
@@ -44,8 +44,8 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     content = Column(String, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
+    event_id = Column(Integer, ForeignKey('events.id', ondelete="CASCADE"), nullable=False)
     
     user = relationship("User", back_populates="messages")
     event = relationship("Event", back_populates="messages")
