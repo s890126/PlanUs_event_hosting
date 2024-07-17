@@ -17,6 +17,15 @@
             height: 150px;
             object-fit: cover;
         }
+
+        .badge {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -27,16 +36,18 @@
                 <!-- Buttons for toggling between public and private events -->
                 <div class="flex justify-between mb-4">
                     <button 
-                        class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                        class="relative bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
                         hx-get="/events/partial?event_type=public" hx-target="#container" hx-swap="outerHTML"
                     >
                         Public Events
+                        <span class="badge">{{ public_events_count }}</span>
                     </button>
                     <button 
-                        class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                        class="relative bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
                         hx-get="/events/partial?event_type=invited" hx-target="#container" hx-swap="outerHTML"
                     >
                         Private Events
+                        <span class="badge">{{ invited_events_count }}</span>
                     </button>
                 </div>
 

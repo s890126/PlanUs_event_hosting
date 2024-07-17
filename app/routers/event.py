@@ -128,6 +128,10 @@ def get_events_partial(
     
     top_events = top_events_query.all()
     
+    # Query to count public and invited events
+    public_events_count = db.query(models.Event).filter(models.Event.public == True).count()
+    invited_events_count = db.query(models.Invitation).filter(models.Invitation.user_id == current_user.id).count()
+    
     events_with_participants = []
     for event, participants, participants_emails, participants_ids, host_email, picture, tags in results:
         event_response = schemas.EventResponse.from_orm(event)
@@ -164,7 +168,9 @@ def get_events_partial(
         "top_events": top_events_with_participants,
         "user": current_user,
         "base_url": settings.base_url,
-        "event_type": event_type  # Pass the event type to the template
+        "event_type": event_type,  # Pass the event type to the template
+        "public_events_count": public_events_count,  # Pass the count of public events
+        "invited_events_count": invited_events_count  # Pass the count of invited events
     })
 
 
