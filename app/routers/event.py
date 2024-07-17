@@ -407,10 +407,23 @@ def delete_event(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event with id: {id} does not exist.")
     if event.host_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+    
+    # Delete related messages first
+    db.query(models.Message).filter(models.Message.event_id == id).delete(synchronize_session=False)
+    db.commit()
+
+    # Delete related invitations if necessary
+    db.query(models.Invitation).filter(models.Invitation.event_id == id).delete(synchronize_session=False)
+    db.commit()
+
+    # Delete event picture if it exists
     if event.picture and os.path.exists(event.picture):
         os.remove(event.picture)
+        
+    # Delete the event
     event_query.delete(synchronize_session=False)
     db.commit()
+
     return RedirectResponse(url=f"/{current_user.id}/profile", status_code=status.HTTP_303_SEE_OTHER)
 
 
