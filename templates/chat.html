@@ -13,7 +13,7 @@
         let currentUserEmail = null;
         let usersMap = new Map();
         
-        const ws = new WebSocket(`ws://${window.location.host}/ws/${event_id}`);
+        const ws = new WebSocket(`wss://${window.location.host}/ws/${event_id}`);
         const messagesDiv = document.getElementById('messages');
         const messageForm = document.getElementById('messageForm');
         const messageInput = document.getElementById('messageInput');
