@@ -1,91 +1,112 @@
-<div class="container mx-auto" id="container">
-    <div class="flex justify-start items-start">
-        <!-- Main Events Section -->
-        <div class="w-2/3 -ml-16 h-screen overflow-y-auto pr-4">
-            
-            <!-- Buttons for toggling between public and private events -->
-            <div class="flex justify-between mb-4">
-                <button 
-                    class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
-                    hx-get="/events/partial?event_type=public" hx-target="#container" hx-swap="outerHTML"
-                >
-                    Public Events
-                </button>
-                <button 
-                    class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
-                    hx-get="/events/partial?event_type=invited" hx-target="#container" hx-swap="outerHTML"
-                >
-                    Private Events
-                </button>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .event-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
 
-            <!-- Main events section -->
-            <div id="events-list">
-                {% for event_data in events %}
-                <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex">
-                    {% if event_data.picture %}
-                    <div class="w-1/4">
-                        <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
-                    </div>
-                    {% endif %}
-                    <div class="w-3/4 pl-6 flex flex-col justify-between relative">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-800">
-                                    <a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
-                                        {{ event_data.event.title }}
-                                    </a>
-                                </h2>
-                                <p class="text-xl text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
-                                <p class="text-xl text-gray-500">{{ event_data.event.location }}</p>
-                                <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
-                                <div class="flex flex-wrap mt-2">
-                                    {% for tag in event_data.tags %}
-                                    <span class="bg-purple-200 text-purple-700 text-sm2 mt-2 font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
-                                    {% endfor %}
+        .sidebar-event-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto" id="container">
+        <div class="flex justify-start items-start">
+            <!-- Main Events Section -->
+            <div class="w-2/3 -ml-16 h-screen overflow-y-auto pr-4">
+                <!-- Buttons for toggling between public and private events -->
+                <div class="flex justify-between mb-4">
+                    <button 
+                        class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                        hx-get="/events/partial?event_type=public" hx-target="#container" hx-swap="outerHTML"
+                    >
+                        Public Events
+                    </button>
+                    <button 
+                        class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                        hx-get="/events/partial?event_type=invited" hx-target="#container" hx-swap="outerHTML"
+                    >
+                        Private Events
+                    </button>
+                </div>
+
+                <!-- Main events section -->
+                <div id="events-list">
+                    {% for event_data in events %}
+                    <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex">
+                        {% if event_data.picture %}
+                        <div class="w-1/4">
+                            <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="event-image rounded-md">
+                        </div>
+                        {% endif %}
+                        <div class="w-3/4 pl-6 flex flex-col justify-between relative">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
+                                            {{ event_data.event.title }}
+                                        </a>
+                                    </h2>
+                                    <p class="text-xl text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
+                                    <p class="text-xl text-gray-500">{{ event_data.event.location }}</p>
+                                    <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
+                                    <div class="flex flex-wrap mt-2">
+                                        {% for tag in event_data.tags %}
+                                        <span class="bg-purple-200 text-purple-700 text-sm2 mt-2 font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-800 font-bold text-xl">{{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <p class="text-gray-800 font-bold text-xl">{{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <div class="flex justify-between items-end mt-auto">
+                                <div class="text-gray-600 text-sm">Created at: {{ event_data.event.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                <form hx-post="/attend" hx-include="[name='event_id']" hx-trigger="submit" hx-swap="outerHTML">
+                                    <input type="hidden" id="event_id" name="event_id" value="{{ event_data.event.id }}">
+                                    <button type="submit" class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                                        {{ 'Leave' if event_data.has_attended else 'Join' }}
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                        <div class="flex justify-between items-end mt-auto">
-                            <div class="text-gray-600 text-sm">Created at: {{ event_data.event.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                            <form hx-post="/attend" hx-include="[name='event_id']" hx-trigger="submit" hx-swap="outerHTML">
-                                <input type="hidden" id="event_id" name="event_id" value="{{ event_data.event.id }}">
-                                <button type="submit" class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
-                                    {{ 'Leave' if event_data.has_attended else 'Join' }}
-                                </button>
-                            </form>
-                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Sidebar Section for Top 3 Events -->
+            <div class="w-1/3 ml-16">
+                <h2 class="text-2xl font-bold mb-4 text-purple-600">Top 3 Most Participants Events 🔥🔥🔥</h2>
+                {% for event_data in top_events %}
+                <div class="bg-white shadow-md rounded-lg p-4 mb-4 flex">
+                    {% if event_data.picture %}
+                    <div class="w-2/4">
+                        <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="sidebar-event-image rounded-md">
+                    </div>
+                    {% endif %}
+                    <div class="w-3/4 pl-4">
+                        <h3 class="text-xl font-bold text-gray-800"><a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
+                            {{ event_data.event.title }}
+                        </a></h3>
+                        <p class="text-md text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
+                        <p class="text-md text-gray-500">{{ event_data.event.location }}</p>
+                        <p class="text-md text-gray-500">Number of Participants: {{ event_data.participants }}</p>
+                        <p class="text-gray-800 font-bold text-md mt-2">Event Time: {{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            
-        </div>
-        <!-- Sidebar Section for Top 3 Events -->
-        <div class="w-1/3 ml-16">
-            <h2 class="text-2xl font-bold mb-4 text-purple-600">Top 3 Most Participants Events 🔥🔥🔥</h2>
-            {% for event_data in top_events %}
-            <div class="bg-white shadow-md rounded-lg p-4 mb-4 flex">
-                {% if event_data.picture %}
-                <div class="w-2/4">
-                    <img src="{{ url_for('static', path=event_data.picture.replace('static/', '')) }}" alt="Event Picture" class="w-full h-full object-cover rounded-md">
-                </div>
-                {% endif %}
-                <div class="w-3/4 pl-4">
-                    <h3 class="text-xl font-bold text-gray-800"><a href="#" hx-get="/events/{{ event_data.event.id }}" hx-target="#main-content" class="text-purple-500 hover:underline">
-                        {{ event_data.event.title }}
-                    </a></h3>
-                    <p class="text-md text-gray-500">Host: <a href="/{{ event_data.event.host_id }}/profile" class="text-purple-500 hover:underline">{{ event_data.host_email }}</a></p>
-                    <p class="text-md text-gray-500">{{ event_data.event.location }}</p>
-                    <p class="text-md text-gray-500">Number of Participants: {{ event_data.participants }}</p>
- 
-                    <p class="text-gray-800 font-bold text-md mt-2">Event Time: {{ event_data.event.event_time.strftime('%Y-%m-%d %H:%M') }}</p>
-                </div>
-            </div>
-            {% endfor %}
         </div>
     </div>
-</div>
+</body>
+</html>
