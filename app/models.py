@@ -17,7 +17,7 @@ class Event(Base):
     host_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     tags = Column(ARRAY(String), nullable=True)
     public = Column(Boolean, nullable=False, default=True)
-    messages = relationship("Message", back_populates="event")
+    messages = relationship("Message", back_populates="event", cascade="all, delete-orphan")
     invitations = relationship("Invitation", back_populates="event")
 
 class User(Base):
@@ -45,7 +45,7 @@ class Message(Base):
     content = Column(String, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    event_id = Column(Integer, ForeignKey('events.id'), nullable=False)
+    event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
     
     user = relationship("User", back_populates="messages")
     event = relationship("Event", back_populates="messages")
