@@ -41,10 +41,10 @@ def create_user(email: EmailStr = Form(...),
     db.refresh(new_user)
     content = '''
     <div class="mb-7 text-center text-green-500 text-xl font-bold">Signup successful! </br> Redirecting to login page...</div>
-    <meta http-equiv="refresh" content="3;url=/loginpage">
+    <meta http-equiv="refresh" content="3;url=/">
     <script>
         setTimeout(function() {
-            window.location.href = '/loginpage';
+            window.location.href = '/';
         }, 3000);
     </script>
     '''
