@@ -250,12 +250,11 @@ def update_profile(
 
 @app.get("/chatrooms", response_class=HTMLResponse)
 def user_chatrooms(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
-    three_days_ago = datetime.utcnow() - timedelta(days=3)
     chatrooms = (
         db.query(models.Event)
         .join(models.Attend, models.Attend.event_id == models.Event.id)
         .filter(models.Attend.user_id == current_user.id)
-        .filter(models.Event.event_time >= three_days_ago)  # Ensure date is in the future or within the last 3 days
+        .filter(models.Event.event_time >= datetime.utcnow())  # Ensure date is in the future or within the last 3 days
         .all()
     )
     return templates.TemplateResponse("chatrooms.html", {"request": request, "chatrooms": chatrooms, "current_user": current_user})

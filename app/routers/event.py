@@ -129,8 +129,17 @@ def get_events_partial(
     top_events = top_events_query.all()
     
     # Query to count public and invited events
-    public_events_count = db.query(models.Event).filter(models.Event.public == True).count()
-    invited_events_count = db.query(models.Invitation).filter(models.Invitation.user_id == current_user.id).count()
+    public_events_count = db.query(models.Event).filter(
+        models.Event.public == True,
+        models.Event.event_time >= now  # Filter for non-outdated public events
+    ).count()
+    
+    invited_events_count = db.query(models.Invitation).join(
+        models.Event, models.Event.id == models.Invitation.event_id
+    ).filter(
+        models.Invitation.user_id == current_user.id,
+        models.Event.event_time >= now  # Filter for non-outdated invited events
+    ).count()
     
     events_with_participants = []
     for event, participants, participants_emails, participants_ids, host_email, picture, tags in results:
@@ -298,7 +307,14 @@ def create_event(
         db.refresh(new_attendance)
 
     # Handle invitees for private events
-    if not public and invitees:
+    if not public:
+        if invitees is None:
+            invitees = []
+        # Ensure the current user is in the invitees list
+        current_user_email = db.query(models.User).filter(models.User.id == current_user.id).first().email
+        if current_user_email not in invitees:
+            invitees.append(current_user_email)
+
         for email in invitees:
             user = db.query(models.User).filter(models.User.email == email).first()
             if user:
@@ -307,7 +323,6 @@ def create_event(
         db.commit()
 
     return RedirectResponse(url="/events", status_code=status.HTTP_303_SEE_OTHER)
-
 
 @router.post('/update/{id}', response_class=HTMLResponse)
 def update_event_post(
