@@ -24,7 +24,7 @@ def attend(event_id: int = Form(...),
             Joined the event! <br>
             <span class="inline-flex items-center text-2xl">
                 Click on 
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 cursor-pointer ml-2 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="https://www.w3.org/2000/svg" class="h-10 w-10 cursor-pointer ml-2 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.276 8.276 0 01-3.358-.714l-3.96.992a1 1 0 01-1.215-1.215l.993-3.96A8.276 8.276 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-8-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                 </svg>
                 to chat with other participants!
