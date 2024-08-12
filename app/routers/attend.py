@@ -1,21 +1,22 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Form
-from .. import schemas, database, models, oauth2
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from .. import schemas, database, models, oauth2
 
 router = APIRouter(
-    prefix = '/attend',
-    tags = ['Attend']
+    prefix='/attend',
+    tags=['Attend']
 )
 
-templates = Jinja2Templates(directory = "templates")
+templates = Jinja2Templates(directory="templates")
 
-@router.post("/", response_class = HTMLResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_class=HTMLResponse, status_code=status.HTTP_201_CREATED)
 def attend(event_id: int = Form(...), 
            db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
     attend_query = db.query(models.Attend).filter(models.Attend.event_id == event_id, models.Attend.user_id == current_user.id)
     found_attend = attend_query.first()
+
     if not found_attend:
         new_attend = models.Attend(event_id=event_id, user_id=current_user.id)
         db.add(new_attend)
@@ -35,10 +36,11 @@ def attend(event_id: int = Form(...),
         db.commit()
         feedback_message = 'Left the event!'
 
+    # Use full HTTPS URL for redirect
     html_content = f"""
         <html>
         <head>
-            <meta https-equiv="refresh" content="3;url=/events" />
+            <meta http-equiv="refresh" content="3;url=https://planus.onrender.com/events" />
             <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         </head>
         <body class="flex items-center justify-center min-h-screen bg-gray-100">
@@ -46,7 +48,7 @@ def attend(event_id: int = Form(...),
                 <p class="text-2xl text-gray-700">{feedback_message}</p>
                 <script>
                     setTimeout(function() {{
-                        window.location.href = '/events';
+                        window.location.href = 'https://planus.onrender.com/events';
                     }}, 3000);
                 </script>
             </div>
@@ -54,6 +56,7 @@ def attend(event_id: int = Form(...),
         </html>
     """
     return HTMLResponse(content=html_content, status_code=status.HTTP_200_OK)
+
 
 
 
