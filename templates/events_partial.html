@@ -83,7 +83,7 @@
                             </div>
                             <div class="flex justify-between items-end mt-auto">
                                 <div class="text-gray-600 text-sm">Created at: {{ event_data.event.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                                <form hx-post="https://planus.onrender.com/attend" hx-include="[name='event_id']" hx-trigger="submit" hx-swap="outerHTML" hx-on="htmx:afterRequest:showFeedback">
+                                <form hx-post="/attend" hx-include="[name='event_id']" hx-trigger="submit" hx-swap="outerHTML" hx-on="htmx:afterRequest:showFeedback">
                                     <input type="hidden" id="event_id" name="event_id" value="{{ event_data.event.id }}">
                                     <button type="submit" class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
                                         {{ 'Leave' if event_data.has_attended else 'Join' }}

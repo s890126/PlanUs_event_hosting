@@ -15,11 +15,16 @@ import logging
 import json
 from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
+
 
 models.Base.metadata.create_all(bind = engine)
 
 app = FastAPI()
-
+app.add_middleware(HTTPSRedirectMiddleware)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["planus.onrender.com"])
 origins = ["*"]
 
 app.add_middleware(
