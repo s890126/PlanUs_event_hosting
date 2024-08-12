@@ -20,40 +20,15 @@ def attend(event_id: int = Form(...),
         new_attend = models.Attend(event_id=event_id, user_id=current_user.id)
         db.add(new_attend)
         db.commit()
-        feedback_message = """
-            Joined the event! <br>
-            <span class="inline-flex items-center text-2xl">
-                Click on 
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 cursor-pointer ml-2 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.276 8.276 0 01-3.358-.714l-3.96.992a1 1 0 01-1.215-1.215l.993-3.96A8.276 8.276 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-8-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
-                </svg>
-                to chat with other participants!
-            </span>
-        """
+        response = HTMLResponse(status_code = status.HTTP_201_CREATED)
+        response.headers['hx-redirect'] = '/events'
+        return response
     else:
         attend_query.delete(synchronize_session=False)
         db.commit()
-        feedback_message = 'Left the event!'
-
-    html_content = f"""
-        <html>
-        <head>
-            <meta http-equiv="refresh" content="3;url=/events" />
-            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        </head>
-        <body class="flex items-center justify-center min-h-screen bg-gray-100">
-            <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                <p class="text-2xl text-gray-700">{feedback_message}</p>
-                <script>
-                    setTimeout(function() {{
-                        window.location.href = '/events';
-                    }}, 3000);
-                </script>
-            </div>
-        </body>
-        </html>
-    """
-    return HTMLResponse(content=html_content, status_code=status.HTTP_200_OK)
+        response = HTMLResponse(status_code = status.HTTP_201_CREATED)
+        response.headers['hx-redirect'] = '/events'
+        return response
 
 
 

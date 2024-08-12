@@ -73,7 +73,7 @@
                                     <p class="text-xl text-gray-500">Number of Participants: {{ event_data.participants }}</p>
                                     <div class="flex flex-wrap mt-2">
                                         {% for tag in event_data.tags %}
-                                        <span class="bg-purple-200 text-purple-700 text-sm2 mt-2 font-semibold mr-2 px-2.5 py-0.5 rounded cursor-pointer" onclick="setSearchTag('{{ tag }}')">{{ tag }}</span>
+                                        <span class="bg-purple-200 text-purple-700 text-sm2 mt-2 font-semibold mr-2 px-2.5 py-0.5 rounded">{{ tag }}</span>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -119,16 +119,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function setSearchTag(tag) {
-            const searchBar = document.getElementById('search-bar');
-            if (searchBar) {
-                searchBar.value = tag;
-                searchBar.focus();
-                searchBar.dispatchEvent(new Event('input', { bubbles: true })); // Trigger hx-get
-            }
-        }
-    </script>
 </body>
 </html>
