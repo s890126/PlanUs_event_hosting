@@ -38,7 +38,7 @@ def attend(event_id: int = Form(...),
     html_content = f"""
         <html>
         <head>
-            <meta http-equiv="refresh" content="3;url=/events" />
+            <meta https-equiv="refresh" content="3;url=/events" />
             <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         </head>
         <body class="flex items-center justify-center min-h-screen bg-gray-100">
